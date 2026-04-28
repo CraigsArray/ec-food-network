@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import supabase from './supabase'
-import { MapPin, User, Building, Hash, Plus, Trash2, CalendarDays, Sun, Moon } from 'lucide-react'
+import { MapPin, User, Plus, Trash2, CalendarDays, Sun, Moon, ThumbsUp, AlertCircle } from 'lucide-react'
 
 const DESC_LIMIT = 200
 
@@ -407,33 +407,72 @@ function App() {
                           {/* Smart Feed Badges */}
                           <div className="flex flex-col items-end gap-2">
                             {post.status === 'now' && (
-                              <span className="inline-flex items-center text-xs font-bold text-emerald-300 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 whitespace-nowrap animate-pulse">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>
+                              <span className="inline-flex items-center text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/20 whitespace-nowrap animate-pulse">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 mr-2"></span>
                                 Happening Now
-                              </span>
-                            )}
-                            
-                            {(post.status === 'upcoming' || post.status === 'now') && post.nextOccurrence && (
-                              <span className="inline-flex items-center text-xs font-medium text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20 whitespace-nowrap">
-                                <CalendarDays className="w-3.5 h-3.5 mr-1.5 opacity-70" />
-                                Next: {formatDate(post.nextOccurrence.startDate)}
-                              </span>
-                            )}
-
-                            {post.futureCount > 0 && (
-                              <span className="text-xs text-slate-500 font-medium px-1">
-                                +{post.futureCount} more dates
                               </span>
                             )}
                           </div>
                         </div>
                         
+                        <div className="bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-5 mb-6 border border-slate-100 dark:border-slate-700/50">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4 flex items-center">
+                            Pickup Details
+                          </h4>
+                          <div className="space-y-4">
+                            {(post.status === 'upcoming' || post.status === 'now') && post.nextOccurrence ? (
+                              <div className="flex items-start gap-3">
+                                <div className="mt-0.5 bg-indigo-100 dark:bg-indigo-500/20 p-2 rounded-lg">
+                                  <CalendarDays className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-slate-800 dark:text-slate-200 text-base">
+                                    {formatDate(post.nextOccurrence.startDate)}
+                                  </p>
+                                  {post.nextOccurrence.end_time && (
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                                      Until {formatDate(new Date(post.nextOccurrence.end_time))}
+                                    </p>
+                                  )}
+                                  {post.futureCount > 0 && (
+                                    <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium mt-1">
+                                      +{post.futureCount} more upcoming date{post.futureCount > 1 ? 's' : ''}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                               <div className="flex items-start gap-3">
+                                <div className="mt-0.5 bg-slate-200 dark:bg-slate-800 p-2 rounded-lg">
+                                  <CalendarDays className="w-5 h-5 text-slate-400" />
+                                </div>
+                                <p className="font-medium text-slate-500 dark:text-slate-400 italic pt-1 text-sm">No upcoming dates scheduled</p>
+                              </div>
+                            )}
+
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5 bg-emerald-100 dark:bg-emerald-500/20 p-2 rounded-lg">
+                                <MapPin className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                              </div>
+                              <div>
+                                {post.location_name && <p className="font-semibold text-slate-800 dark:text-slate-200 text-base">{post.location_name}</p>}
+                                <p className={`text-slate-600 dark:text-slate-400 mt-0.5 ${!post.location_name ? 'font-semibold text-base text-slate-800 dark:text-slate-200' : 'text-sm'}`}>
+                                  {post.address || 'Address not provided'}
+                                  {(post.address && post.city) && ', '}
+                                  {post.city && post.city}
+                                  {post.zip && ` ${post.zip}`}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                         {(() => {
                           const isLong = post.description && post.description.length > DESC_LIMIT
                           const isExpanded = !!expandedDescriptions[post.id]
                           return (
                             <div className="mb-6">
-                              <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed whitespace-pre-line">
+                              <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed whitespace-pre-line">
                                 {isLong && !isExpanded
                                   ? post.description.slice(0, DESC_LIMIT).trimEnd() + '…'
                                   : post.description}
@@ -441,7 +480,7 @@ function App() {
                               {isLong && (
                                 <button
                                   onClick={e => { e.stopPropagation(); setExpandedDescriptions(prev => ({ ...prev, [post.id]: !prev[post.id] })) }}
-                                  className="mt-1.5 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+                                  className="mt-2 text-sm font-semibold text-indigo-500 hover:text-indigo-400 transition-colors"
                                 >
                                   {isExpanded ? 'Show less ↑' : 'Read more ↓'}
                                 </button>
@@ -450,42 +489,36 @@ function App() {
                           )
                         })()}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 mb-6 text-sm text-slate-400">
-                          {(post.author_name || post.organization_type) && (
-                            <div className="flex items-center gap-2.5">
-                              <User className="w-4 h-4 text-indigo-400/70" />
+                        <div className="flex items-center justify-between pt-5 border-t border-slate-200 dark:border-slate-800/60 mt-4">
+                          {(post.author_name || post.organization_type) ? (
+                            <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                              <User className="w-4 h-4 opacity-70" />
                               <span>
-                                <span className="text-slate-200 font-medium">{post.author_name || 'Anonymous'}</span>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">{post.author_name || 'Anonymous'}</span>
                                 {post.organization_type && <span className="opacity-70"> • {post.organization_type}</span>}
                               </span>
                             </div>
+                          ) : (
+                            <div></div>
                           )}
-                          
-                          {(post.location_name || post.address || post.city) && (
-                            <div className="flex items-center gap-2.5">
-                              <Building className="w-4 h-4 text-indigo-400/70" />
-                              <span className="truncate">
-                                {post.location_name && <span className="text-slate-200 font-medium mr-1">{post.location_name}</span>}
-                                <span className="opacity-80">
-                                  {post.address && post.address}
-                                  {post.address && post.city && ', '}
-                                  {post.city && post.city}
-                                </span>
-                              </span>
-                            </div>
-                          )}
-                        </div>
 
-                        {post.tags && post.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2 pt-5 border-t border-slate-800/60">
-                            {post.tags.map((tag, idx) => (
-                              <span key={idx} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
-                                <Hash className="w-3 h-3 mr-1 opacity-50" />
-                                {tag}
-                              </span>
-                            ))}
+                          <div className="flex items-center gap-4">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); alert('Like functionality coming soon!') }}
+                              className="flex items-center justify-center p-2 rounded-full text-slate-500 hover:bg-emerald-100 hover:text-emerald-600 dark:hover:bg-emerald-500/20 dark:hover:text-emerald-400 transition-colors"
+                              title="Like this resource"
+                            >
+                              <ThumbsUp className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); alert('Report functionality coming soon!') }}
+                              className="flex items-center justify-center p-2 rounded-full text-slate-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-500/20 dark:hover:text-red-400 transition-colors"
+                              title="Report this resource"
+                            >
+                              <AlertCircle className="w-5 h-5" />
+                            </button>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </article>
                   )
