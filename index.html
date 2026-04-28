@@ -4,7 +4,13 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Food Network</title>
+    <title>East County Food Network</title>
+    <script>
+      window.initMap = function() {
+        window.dispatchEvent(new Event('google-maps-loaded'));
+      };
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATKV3W2gaC31gaDZvAd3M9rmNZk9eapxI&callback=initMap" async defer></script>
   </head>
   <body>
     <div id="root"></div>
