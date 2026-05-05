@@ -424,7 +424,7 @@ function App() {
   const getEndOfWeek = () => {
     const today = getLocalToday()
     const day = today.getDay() // 0=Sun
-    const diff = 6 - day // days until Saturday
+    const diff = day === 0 ? 0 : 7 - day // days until Sunday (end of week)
     const eow = new Date(today)
     eow.setDate(today.getDate() + diff)
     eow.setHours(23, 59, 59, 999)
