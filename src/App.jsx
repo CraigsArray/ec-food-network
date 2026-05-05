@@ -75,6 +75,18 @@ function App() {
           
         validOccurrences.sort((a, b) => a.startDate - b.startDate)
 
+        // Fallback: events stored directly on posts table (no post_occurrences rows)
+        if (validOccurrences.length === 0 && post.start_time) {
+          validOccurrences.push({
+            startDate: new Date(post.start_time),
+            endDate: post.end_time ? new Date(post.end_time) : null,
+            start_time: post.start_time,
+            end_time: post.end_time,
+            is_cancelled: false,
+            notes: null
+          })
+        }
+
         let status = 'none'
         let nextOccurrence = null
         let futureCount = 0
@@ -574,16 +586,7 @@ function App() {
                         borderColor: isActive ? 'var(--ecc-orange)' : 'var(--ecc-steel-border)'
                       }}
                     >
-                      {post.image_url && (
-                        <div className="w-full h-64 overflow-hidden bg-slate-950">
-                          <img 
-                            src={post.image_url} 
-                            alt={post.title} 
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                            onError={(e) => { e.target.style.display = 'none' }}
-                          />
-                        </div>
-                      )}
+
                       <div className="p-7">
                         <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                           <div className="flex flex-wrap items-center gap-2">
@@ -694,7 +697,20 @@ function App() {
                             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                               <User className="w-4 h-4 opacity-70" />
                               <span>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">{post.author_name || 'Anonymous'}</span>
+                                {post.website_url ? (
+                                  <a
+                                    href={post.website_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                    className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
+                                    style={darkMode ? {} : { color: 'var(--ecc-steel)' }}
+                                  >
+                                    {post.author_name || 'Visit Website'}
+                                  </a>
+                                ) : (
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">{post.author_name || 'Anonymous'}</span>
+                                )}
                                 {post.organization_type && <span className="opacity-70"> • {post.organization_type}</span>}
                               </span>
                             </div>
