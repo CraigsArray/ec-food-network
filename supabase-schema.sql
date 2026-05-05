@@ -1,58 +1,43 @@
 -- Supabase Schema Setup
 
--- 1. Create Organizations table
-CREATE TABLE organizations (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name text NOT NULL,
-  website text,
-  phone text,
-  email text,
-  logo_url text,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- 2. Create Posts table
+-- 1. Create Posts table
 CREATE TABLE posts (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id uuid REFERENCES organizations(id),
   title text NOT NULL,
   description text,
+  category text,
   address text,
   city text,
   zip text,
   latitude double precision,
   longitude double precision,
+  -- Organization fields (stored directly on post, no separate orgs table)
+  author_name text,
+  organization_type text,
+  phone text,
+  email text,
+  logo_url text,
+  website_url text,
+  -- Scheduling (legacy direct fields; prefer post_occurrences for new entries)
   start_time timestamp with time zone,
   end_time timestamp with time zone,
-  category text,
   tags text[],
-  website_url text,                                    -- Organization's public website
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   expires_at timestamp with time zone,
   is_active boolean DEFAULT true
 );
 
--- 3. Set up Storage
--- You can run this part in the Supabase SQL Editor or set it up manually via the dashboard:
--- Create a new public storage bucket called "post-images"
-insert into storage.buckets (id, name, public) values ('post-images', 'post-images', true);
+-- 2. Set up Storage
+insert into storage.buckets (id, name, public) values ('post-images', 'post-images', true)
+  on conflict (id) do nothing;
 
--- Enable Row Level Security (RLS) on posts and organizations
+-- Enable Row Level Security (RLS)
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 
--- Create policies for public reading (Since it's a public resource feed)
-CREATE POLICY "Public profiles are viewable by everyone." 
-ON posts FOR SELECT 
+CREATE POLICY "Public profiles are viewable by everyone."
+ON posts FOR SELECT
 USING ( true );
 
-CREATE POLICY "Public profiles are viewable by everyone." 
-ON organizations FOR SELECT 
-USING ( true );
-
--- For MVP admin writes, we can allow authenticated users to insert/update, 
--- or simply disable RLS temporarily while testing.
--- To allow authenticated inserts:
 CREATE POLICY "Enable insert for authenticated users only"
 ON posts FOR INSERT
 TO authenticated
@@ -68,7 +53,7 @@ ON storage.objects FOR INSERT
 TO authenticated
 WITH CHECK ( bucket_id = 'post-images' );
 
--- 4. Create Post Occurrences table
+-- 3. Create Post Occurrences table
 CREATE TABLE post_occurrences (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   post_id uuid REFERENCES posts(id) ON DELETE CASCADE,
@@ -82,8 +67,8 @@ CREATE TABLE post_occurrences (
 
 ALTER TABLE post_occurrences ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Public profiles are viewable by everyone." 
-ON post_occurrences FOR SELECT 
+CREATE POLICY "Public profiles are viewable by everyone."
+ON post_occurrences FOR SELECT
 USING ( true );
 
 CREATE POLICY "Enable insert for authenticated users only"
@@ -91,7 +76,16 @@ ON post_occurrences FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
--- 5. Migration: rename image_url → website_url on posts
--- Run this in the Supabase SQL Editor if the posts table already exists:
+-- ============================================================
+-- Migration: run these in the Supabase SQL Editor if the posts
+-- table already exists from an earlier schema version.
+-- ============================================================
+-- Drop organizations FK and add flat org columns to posts:
+-- ALTER TABLE posts DROP COLUMN IF EXISTS organization_id;
+-- ALTER TABLE posts ADD COLUMN IF NOT EXISTS author_name text;
+-- ALTER TABLE posts ADD COLUMN IF NOT EXISTS organization_type text;
+-- ALTER TABLE posts ADD COLUMN IF NOT EXISTS phone text;
+-- ALTER TABLE posts ADD COLUMN IF NOT EXISTS email text;
+-- ALTER TABLE posts ADD COLUMN IF NOT EXISTS logo_url text;
+-- Rename image_url → website_url if coming from the original schema:
 -- ALTER TABLE posts RENAME COLUMN image_url TO website_url;
--- COMMENT ON COLUMN posts.website_url IS 'Public website URL for the posting organization';
