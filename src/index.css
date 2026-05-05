@@ -2,6 +2,24 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ── ECC Light-Theme Palette ────────────────────────────────
+   Inspired by El Cajon Collaborative:
+     Cream background  #EDE8DF
+     Steel-blue accent #4A7A9B
+     Burnt orange      #C4762A
+   ─────────────────────────────────────────────────────────── */
+:root {
+  --ecc-cream:        #EDE8DF;
+  --ecc-cream-dark:   #E0D9CE;
+  --ecc-steel:        #4A7A9B;
+  --ecc-steel-light:  #D6E4EF;
+  --ecc-steel-border: #9BBDD4;
+  --ecc-orange:       #C4762A;
+  --ecc-orange-light: #F5E6D3;
+  --ecc-text:         #1C2B3A;
+  --ecc-text-muted:   #4A6070;
+}
+
 @theme {
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
@@ -20,15 +38,44 @@
   body {
     @apply antialiased font-sans;
   }
+
+  /* Light-mode page background → warm cream */
+  :not(.dark) body,
+  :not(.dark) #root {
+    background-color: var(--ecc-cream);
+  }
 }
 
 @layer components {
   .label {
-    @apply block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5;
+    @apply block text-xs font-bold uppercase tracking-wider mb-1.5 dark:text-slate-400;
+    color: var(--ecc-steel);
   }
+  /* Light: cream input bg with steel border; dark unchanged */
   .field {
-    @apply w-full bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all;
+    @apply w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-all
+           dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200 dark:placeholder:text-slate-600 dark:focus:border-indigo-500 dark:focus:ring-indigo-500;
+    background-color: #F5F1EA;
+    border: 1px solid var(--ecc-steel-border);
+    color: var(--ecc-text);
+  }
+  .field::placeholder {
+    color: var(--ecc-text-muted);
+    opacity: 0.6;
+  }
+  .field:focus {
+    border-color: var(--ecc-steel);
+    box-shadow: 0 0 0 1px var(--ecc-steel);
+  }
+  /* Dark mode field overrides (keep existing dark styles) */
+  .dark .field {
+    background-color: rgb(2 6 23); /* slate-950 */
+    border-color: rgb(30 41 59);   /* slate-800 */
+    color: rgb(226 232 240);       /* slate-200 */
+  }
+  .dark .field::placeholder { color: rgb(71 85 105); opacity: 1; }
+  .dark .field:focus {
+    border-color: rgb(99 102 241);
+    box-shadow: 0 0 0 1px rgb(99 102 241);
   }
 }
-
-

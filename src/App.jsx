@@ -446,8 +446,10 @@ function App() {
     : upcomingPosts
 
   return (
-    <div className={`${darkMode ? 'dark' : ''} min-h-screen font-sans selection:bg-indigo-500/30 pb-20 bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300`}>
-      <header className="w-full bg-gradient-to-r from-indigo-100 via-purple-100 to-slate-100 dark:from-indigo-950 dark:via-purple-950 dark:to-slate-950 border-b border-indigo-300/40 dark:border-indigo-500/20 pt-16 pb-12 px-6">
+    <div className={`${darkMode ? 'dark' : ''} min-h-screen font-sans selection:bg-amber-500/30 pb-20 dark:bg-slate-950 dark:text-slate-200 transition-colors duration-300`} style={darkMode ? {} : { backgroundColor: 'var(--ecc-cream)', color: 'var(--ecc-text)' }}>
+      <header className="w-full border-b pt-16 pb-12 px-6 dark:from-indigo-950 dark:via-purple-950 dark:to-slate-950 dark:border-indigo-500/20 dark:bg-gradient-to-r"
+        style={darkMode ? {} : { backgroundColor: 'var(--ecc-steel)', borderColor: '#3D6882' }}
+      >
         <div className="max-w-6xl mx-auto relative">
           {/* Header Controls */}
           <div className="absolute top-0 right-0 flex items-center gap-2">
@@ -473,10 +475,14 @@ function App() {
             </button>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-200 dark:to-purple-200 mb-4 tracking-tight">
-            East County Food Network
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-indigo-200 dark:to-purple-200"
+            style={darkMode ? {} : { color: '#FFFFFF' }}
+          >
+            East County Food Access Network
           </h1>
-          <p className="text-lg md:text-xl text-indigo-700/80 dark:text-indigo-200/80 max-w-2xl font-medium">
+          <p className="text-lg md:text-xl max-w-2xl font-medium dark:text-indigo-200/80"
+            style={darkMode ? {} : { color: 'rgba(255,255,255,0.85)' }}
+          >
             Share food donations and pickup info across East San Diego County.
             Connect with your community to reduce waste and fight hunger.
           </p>
@@ -489,20 +495,23 @@ function App() {
           <div className="lg:col-span-8 space-y-8">
             <div 
               ref={mapRef}
-              className="bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-3xl min-h-[350px] shadow-lg shadow-black/10 dark:shadow-black/20 overflow-hidden relative"
+              className="border dark:bg-slate-900 dark:border-slate-800 rounded-3xl min-h-[350px] shadow-lg shadow-black/10 dark:shadow-black/20 overflow-hidden relative"
+              style={darkMode ? {} : { backgroundColor: 'var(--ecc-steel-light)', borderColor: 'var(--ecc-steel-border)' }}
             >
               {!mapLoaded && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-200 dark:bg-slate-900 z-10">
+                <div className="absolute inset-0 flex flex-col items-center justify-center dark:bg-slate-900 z-10" style={darkMode ? {} : { backgroundColor: 'var(--ecc-steel-light)' }}>
                   <MapPin className="w-12 h-12 text-slate-400 dark:text-slate-600 mb-4 animate-pulse" />
                   <h3 className="text-xl font-semibold text-slate-500 dark:text-slate-400">Loading Map...</h3>
                 </div>
               )}
             </div>
 
-            <div className="border-b border-slate-300 dark:border-slate-800 pb-4">
+            <div className="border-b dark:border-slate-800 pb-4" style={darkMode ? {} : { borderColor: 'var(--ecc-steel-border)' }}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Upcoming Events This Week</h2>
-                <span className="text-sm font-medium text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-300 dark:border-slate-800">
+                <h2 className="text-2xl font-bold dark:text-slate-100" style={darkMode ? {} : { color: 'var(--ecc-text)' }}>Upcoming Events This Week</h2>
+                <span className="text-sm font-medium dark:text-slate-400 dark:bg-slate-900 px-3 py-1 rounded-full dark:border-slate-800 border"
+                  style={darkMode ? {} : { color: 'var(--ecc-steel)', backgroundColor: 'var(--ecc-steel-light)', borderColor: 'var(--ecc-steel-border)' }}
+                >
                   {visiblePosts.length} {visiblePosts.length === 1 ? 'Event' : 'Events'}
                 </span>
               </div>
@@ -510,9 +519,10 @@ function App() {
                 onClick={() => setShowPastEvents(prev => !prev)}
                 className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-1.5 rounded-full border transition-all duration-200 ${
                   showPastEvents
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 hover:bg-amber-500/30'
-                    : 'bg-slate-200/60 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/30'
+                    : 'dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700'
                 }`}
+                style={!darkMode && !showPastEvents ? { backgroundColor: 'var(--ecc-steel-light)', borderColor: 'var(--ecc-steel-border)', color: 'var(--ecc-steel)' } : {}}
               >
                 <span className={`w-2 h-2 rounded-full transition-colors ${showPastEvents ? 'bg-amber-400' : 'bg-slate-400'}`} />
                 {showPastEvents ? 'Hiding Past Events' : 'Show Past Events'}
@@ -534,12 +544,14 @@ function App() {
                 <p className="text-sm opacity-80 mt-1">{error}</p>
               </div>
             ) : visiblePosts.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-12 rounded-3xl text-center shadow-lg shadow-black/10 dark:shadow-black/20">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
-                  <CalendarDays className="w-8 h-8 text-slate-400 dark:text-slate-500" />
+              <div className="p-12 rounded-3xl text-center shadow-lg border dark:bg-slate-900 dark:border-slate-800 dark:shadow-black/20"
+                style={darkMode ? {} : { backgroundColor: '#F0EBE2', borderColor: 'var(--ecc-steel-border)' }}
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 dark:bg-slate-800" style={darkMode ? {} : { backgroundColor: 'var(--ecc-steel-light)' }}>
+                  <CalendarDays className="w-8 h-8 dark:text-slate-500" style={darkMode ? {} : { color: 'var(--ecc-steel)' }} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2">No upcoming events this week.</h3>
-                <p className="text-slate-500 text-sm">Check back soon or enable past events to view previous resources.</p>
+                <h3 className="text-xl font-bold mb-2 dark:text-slate-300" style={darkMode ? {} : { color: 'var(--ecc-text)' }}>No upcoming events this week.</h3>
+                <p className="text-sm" style={darkMode ? { color: '#94a3b8' } : { color: 'var(--ecc-text-muted)' }}>Check back soon or enable past events to view previous resources.</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -552,11 +564,15 @@ function App() {
                       key={post.id} 
                       ref={el => postRefs.current[post.id] = el}
                       onClick={() => setActivePostId(post.id)}
-                      className={`bg-white dark:bg-slate-900 border rounded-3xl overflow-hidden shadow-lg dark:shadow-xl shadow-black/10 dark:shadow-black/20 transition-all duration-300 group cursor-pointer ${
+                      className={`dark:bg-slate-900 border rounded-3xl overflow-hidden shadow-lg dark:shadow-xl shadow-black/10 dark:shadow-black/20 transition-all duration-300 group cursor-pointer ${
                         pastFlag ? 'opacity-60' : ''
                       } ${
-                        isActive ? 'border-indigo-500 ring-1 ring-indigo-500/50' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        isActive ? 'border-[var(--ecc-orange)] dark:border-indigo-500 ring-1 ring-[var(--ecc-orange)]/40 dark:ring-indigo-500/50' : 'dark:border-slate-800 dark:hover:border-slate-700'
                       }`}
+                      style={darkMode ? {} : {
+                        backgroundColor: '#F7F3EE',
+                        borderColor: isActive ? 'var(--ecc-orange)' : 'var(--ecc-steel-border)'
+                      }}
                     >
                       {post.image_url && (
                         <div className="w-full h-64 overflow-hidden bg-slate-950">
