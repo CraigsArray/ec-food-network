@@ -784,6 +784,10 @@ function App() {
                     <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
                       Organization <span className="normal-case font-normal text-slate-400">(optional)</span>
                     </p>
+                    <div>
+                      <label className="label">Website URL</label>
+                      <input value={formData.website_url} onChange={e => handleField('website_url', e.target.value)} type="url" placeholder="https://example.org" className="field" />
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="label">Org Name</label>
@@ -1008,13 +1012,9 @@ function App() {
                     )}
                   </div>
 
-                  {/* Section: Media & Tags */}
+                  {/* Section: Tags */}
                   <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">Media & Tags</p>
-                    <div>
-                      <label className="label">Website URL <span className="normal-case font-normal text-slate-400">(organization's site)</span></label>
-                      <input value={formData.website_url} onChange={e => handleField('website_url', e.target.value)} type="url" placeholder="https://example.org" className="field" />
-                    </div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">Tags</p>
                     <div>
                       <label className="label">Tags <span className="normal-case font-normal text-slate-400">(comma-separated)</span></label>
                       <input value={formData.tags} onChange={e => handleField('tags', e.target.value)} placeholder="Hot Meal, Vegan, Walk-in" className="field" />

@@ -38,9 +38,8 @@ CREATE POLICY "Public profiles are viewable by everyone."
 ON posts FOR SELECT
 USING ( true );
 
-CREATE POLICY "Enable insert for authenticated users only"
+CREATE POLICY "Enable insert for everyone"
 ON posts FOR INSERT
-TO authenticated
 WITH CHECK (true);
 
 -- Allow public access to the bucket
@@ -71,9 +70,8 @@ CREATE POLICY "Public profiles are viewable by everyone."
 ON post_occurrences FOR SELECT
 USING ( true );
 
-CREATE POLICY "Enable insert for authenticated users only"
+CREATE POLICY "Enable insert for everyone"
 ON post_occurrences FOR INSERT
-TO authenticated
 WITH CHECK (true);
 
 -- ============================================================
