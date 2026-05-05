@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>East County Food Network – Resource Map</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #2d7a3a;
+      --green-light: #e8f5eb;
+      --green-mid: #4caf6a;
+      --text: #1a1a1a;
+      --muted: #6b7280;
+      --border: #e2e8f0;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8faf9;
+      color: var(--text);
+    }
+
+    /* ── Header ──────────────────────────────────────────── */
+    #widget-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: var(--green);
+      color: #fff;
+    }
+    #widget-header svg { flex-shrink: 0; }
+    #widget-header h1 { font-size: 1rem; font-weight: 700; letter-spacing: 0.01em; }
+    #widget-header p  { font-size: 0.72rem; opacity: 0.85; margin-top: 1px; }
+
+    /* ── Map ─────────────────────────────────────────────── */
+    #map-container {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      background: #d1e8d4;
+    }
+    #map { width: 100%; height: 100%; }
+
+    /* ── Spinner / Error overlay ─────────────────────────── */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(248,250,249,0.92);
+      gap: 14px;
+      z-index: 10;
+    }
+    #overlay.hidden { display: none; }
+
+    .spinner {
+      width: 42px; height: 42px;
+      border: 4px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .error-box {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      padding: 0 24px;
+    }
+    .error-box.visible { display: flex; }
+    .error-icon { font-size: 2.2rem; }
+    .error-title { font-weight: 700; color: #b91c1c; font-size: 0.95rem; }
+    .error-msg   { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── Resource count badge ────────────────────────────── */
+    #count-bar {
+      padding: 9px 18px;
+      background: var(--green-light);
+      border-bottom: 1px solid #c8e6cd;
+      font-size: 0.78rem;
+      color: var(--green);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #count-bar.hidden { display: none; }
+
+    /* ── Cards list ──────────────────────────────────────── */
+    #list-section {
+      padding: 14px 14px 18px;
+      max-height: 340px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #list-section::-webkit-scrollbar { width: 5px; }
+    #list-section::-webkit-scrollbar-thumb { background: #c8e6cd; border-radius: 10px; }
+
+    .resource-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.18s, border-color 0.18s;
+      cursor: pointer;
+    }
+    .resource-card:hover {
+      border-color: var(--green-mid);
+      box-shadow: 0 4px 18px rgba(45,122,58,0.13);
+    }
+    .resource-card.active {
+      border-color: var(--green);
+      background: var(--green-light);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .status-pill {
+      flex-shrink: 0;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .pill-live    { background: #dcfce7; color: #166534; }
+    .pill-soon    { background: #fef9c3; color: #854d0e; }
+    .pill-ended   { background: #f1f5f9; color: #64748b; }
+    .pill-none    { display: none; }
+
+    .card-meta {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .meta-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .meta-icon {
+      flex-shrink: 0;
+      width: 13px;
+      margin-top: 1px;
+      opacity: 0.65;
+    }
+
+    .card-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-directions {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      background: var(--green);
+      color: #fff;
+      transition: background 0.15s;
+    }
+    .btn-directions:hover { background: #225c2c; }
+    .btn-map {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      background: transparent;
+      border: 1px solid var(--green);
+      color: var(--green);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-map:hover { background: var(--green-light); }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    #widget-footer {
+      padding: 8px 18px;
+      background: #f1f5f9;
+      border-top: 1px solid var(--border);
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    #widget-footer a { color: var(--green); text-decoration: none; font-weight: 600; }
+    #widget-footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────── -->
+<div id="widget-header">
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+    <circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.18)"/>
+    <path d="M8 14.5C8 10.91 10.91 8 14.5 8S21 10.91 21 14.5c0 5.25-6.5 9.5-6.5 9.5S8 19.75 8 14.5z" fill="#fff"/>
+    <circle cx="14.5" cy="14.5" r="2.5" fill="#2d7a3a"/>
+  </svg>
+  <div>
+    <h1>East County Food Network</h1>
+    <p>Live food resources in San Diego County</p>
+  </div>
+</div>
+
+<!-- ── Map ────────────────────────────────────────────────── -->
+<div id="map-container">
+  <div id="map"></div>
+
+  <!-- Loading / Error overlay -->
+  <div id="overlay">
+    <div id="spinner-group">
+      <div class="spinner"></div>
+      <p class="spinner-label">Loading resources…</p>
+    </div>
+    <div id="error-box" class="error-box">
+      <div class="error-icon">⚠️</div>
+      <p class="error-title">Couldn't load resources</p>
+      <p class="error-msg" id="error-detail">Check your connection and try refreshing.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Count bar ───────────────────────────────────────────── -->
+<div id="count-bar" class="hidden">
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+    <circle cx="6.5" cy="6.5" r="6.5" fill="#2d7a3a"/>
+    <path d="M4 6.5l2 2 3-3" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span id="count-label">Loading…</span>
+</div>
+
+<!-- ── Cards list ─────────────────────────────────────────── -->
+<div id="list-section"></div>
+
+<!-- ── Footer ─────────────────────────────────────────────── -->
+<div id="widget-footer">
+  Powered by <a href="https://ec-food-network.vercel.app" target="_blank" rel="noopener">East County Food Network</a>
+  &nbsp;·&nbsp; Data updated in real time
+</div>
+
+<!-- ── Supabase JS CDN ─────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- ── App logic ──────────────────────────────────────────── -->
+<script>
+  // ─── Config ─────────────────────────────────────────────
+  const SUPABASE_URL  = 'https://tguediiqmmztewmkejbv.supabase.co';
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRndWVkaWlxbW16dGV3bWtlamJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNDY5MzUsImV4cCI6MjA5MjgyMjkzNX0.d3Zc7K2vAOF07Rsndqa-u9U4l36zJvZu0FglL-rlW7o';
+  const MAPS_API_KEY  = 'AIzaSyATKV3W2gaC31gaDZvAd3M9rmNZk9eapxI';
+  const TABLE         = 'posts';
+  const MAP_CENTER    = { lat: 32.7157, lng: -117.1611 };
+  const MAP_ZOOM      = 11;
+
+  // ─── State ──────────────────────────────────────────────
+  let map, infoWindow;
+  let markers = [];
+  let resources = [];
+  let activeCard = null;
+
+  // ─── Supabase client ─────────────────────────────────────
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ─── Helpers ─────────────────────────────────────────────
+  function formatAddress(r) {
+    const parts = [r.address, r.city, r.zip].filter(Boolean);
+    return parts.join(', ');
+  }
+
+  function getStatus(r) {
+    // Uses start_time / end_time from the posts table
+    if (!r.start_time) return 'none';
+    const now   = Date.now();
+    const start = new Date(r.start_time).getTime();
+    const end   = r.end_time ? new Date(r.end_time).getTime() : null;
+    if (end && now > end) return 'ended';
+    if (now >= start && (!end || now <= end)) return 'live';
+    if (start - now < 3 * 60 * 60 * 1000) return 'soon'; // within 3 hrs
+    return 'upcoming';
+  }
+
+  function statusPill(status) {
+    if (status === 'live')     return '<span class="status-pill pill-live">🟢 Live Now</span>';
+    if (status === 'soon')     return '<span class="status-pill pill-soon">🕐 Starting Soon</span>';
+    if (status === 'ended')    return '<span class="status-pill pill-ended">Ended</span>';
+    if (status === 'upcoming') return '<span class="status-pill pill-ended">Upcoming</span>';
+    return '';
+  }
+
+  function formatTime(iso) {
+    if (!iso) return null;
+    return new Date(iso).toLocaleString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true
+    });
+  }
+
+  function directionsUrl(r) {
+    const dest = encodeURIComponent(formatAddress(r) || r.title);
+    return `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+  }
+
+  // ─── Show / hide overlay ────────────────────────────────
+  function showOverlay()  { document.getElementById('overlay').classList.remove('hidden'); }
+  function hideOverlay()  { document.getElementById('overlay').classList.add('hidden'); }
+  function showError(msg) {
+    document.getElementById('spinner-group').style.display = 'none';
+    const eb = document.getElementById('error-box');
+    eb.classList.add('visible');
+    if (msg) document.getElementById('error-detail').textContent = msg;
+  }
+
+  // ─── Fetch from Supabase ─────────────────────────────────
+  async function fetchResources() {
+    try {
+      const { data, error } = await db
+        .from(TABLE)
+        .select('id, title, address, city, zip, latitude, longitude, start_time, end_time, category, description, is_active')
+        .eq('is_active', true)
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null)
+        .order('start_time', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  // ─── Build a single card ─────────────────────────────────
+  function buildCard(r, index) {
+    const addr    = formatAddress(r);
+    const status  = getStatus(r);
+    const pill    = statusPill(status);
+    const start   = formatTime(r.start_time);
+    const end     = formatTime(r.end_time);
+
+    const card = document.createElement('div');
+    card.className = 'resource-card';
+    card.dataset.index = index;
+
+    let timeHtml = '';
+    if (start) {
+      timeHtml = `
+        <div class="meta-row">
+          <svg class="meta-icon" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span>${start}${end ? ' – ' + end : ''}</span>
+        </div>`;
+    }
+
+    let addrHtml = '';
+    if (addr) {
+      addrHtml = `
+        <div class="meta-row">
+          <svg class="meta-icon" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1C4.79 1 3 2.79 3 5c0 3.25 4 8 4 8s4-4.75 4-8c0-2.21-1.79-4-4-4z" stroke="currentColor" stroke-width="1.3"/>
+            <circle cx="7" cy="5" r="1.4" stroke="currentColor" stroke-width="1.1"/>
+          </svg>
+          <span>${addr}</span>
+        </div>`;
+    }
+
+    let catHtml = '';
+    if (r.category) {
+      catHtml = `
+        <div class="meta-row">
+          <svg class="meta-icon" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <rect x="1.5" y="1.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M4 7h6M4 4.5h6M4 9.5h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          </svg>
+          <span>${r.category}</span>
+        </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-title">${r.title}</div>
+        ${pill}
+      </div>
+      <div class="card-meta">
+        ${addrHtml}
+        ${timeHtml}
+        ${catHtml}
+      </div>
+      <div class="card-actions">
+        ${addr ? `<a class="btn-directions" href="${directionsUrl(r)}" target="_blank" rel="noopener">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 7l10-5-5 10-1.5-4.5L2 7z" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+          </svg>
+          Get Directions
+        </a>` : ''}
+        <button class="btn-map" data-index="${index}" aria-label="Show on map">
+          <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1C4.79 1 3 2.79 3 5c0 3.25 4 8 4 8s4-4.75 4-8c0-2.21-1.79-4-4-4z" stroke="currentColor" stroke-width="1.4"/>
+            <circle cx="7" cy="5" r="1.5" fill="currentColor"/>
+          </svg>
+          Show on Map
+        </button>
+      </div>
+    `;
+
+    // Click card → pan map
+    card.addEventListener('click', () => focusMarker(index));
+
+    // "Show on Map" button → pan map
+    card.querySelector('.btn-map').addEventListener('click', (e) => {
+      e.stopPropagation();
+      focusMarker(index);
+    });
+
+    return card;
+  }
+
+  // ─── Focus a map marker and open its info window ─────────
+  function focusMarker(index) {
+    const r = resources[index];
+    const marker = markers[index];
+    if (!marker) return;
+
+    map.panTo({ lat: r.latitude, lng: r.longitude });
+    map.setZoom(14);
+    openInfoWindow(r, marker);
+
+    // Highlight card
+    if (activeCard) activeCard.classList.remove('active');
+    const card = document.querySelector(`.resource-card[data-index="${index}"]`);
+    if (card) {
+      card.classList.add('active');
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      activeCard = card;
+    }
+  }
+
+  // ─── Info window content ────────────────────────────────
+  function openInfoWindow(r, marker) {
+    const addr  = formatAddress(r);
+    const start = formatTime(r.start_time);
+    const end   = formatTime(r.end_time);
+
+    const content = `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:220px;padding:4px 2px">
+        <div style="font-weight:700;font-size:0.88rem;color:#1a1a1a;margin-bottom:5px">${r.title}</div>
+        ${addr ? `<div style="font-size:0.77rem;color:#4b5563;margin-bottom:3px">📍 ${addr}</div>` : ''}
+        ${start ? `<div style="font-size:0.77rem;color:#4b5563;margin-bottom:3px">🕐 ${start}${end ? ' – ' + end : ''}</div>` : ''}
+        ${r.category ? `<div style="font-size:0.72rem;color:#6b7280;margin-top:2px">📋 ${r.category}</div>` : ''}
+        ${addr ? `<a href="${directionsUrl(r)}" target="_blank" rel="noopener"
+            style="display:inline-block;margin-top:8px;padding:4px 10px;background:#2d7a3a;color:#fff;border-radius:5px;font-size:0.73rem;font-weight:600;text-decoration:none">
+            Get Directions ↗
+          </a>` : ''}
+      </div>`;
+
+    infoWindow.setContent(content);
+    infoWindow.open(map, marker);
+  }
+
+  // ─── Render everything once data + map are ready ─────────
+  function render(data) {
+    resources = data;
+
+    // Count bar
+    const countBar   = document.getElementById('count-bar');
+    const countLabel = document.getElementById('count-label');
+    countBar.classList.remove('hidden');
+    countLabel.textContent = `${data.length} resource${data.length !== 1 ? 's' : ''} found in San Diego County`;
+
+    // Cards
+    const list = document.getElementById('list-section');
+    list.innerHTML = '';
+
+    if (data.length === 0) {
+      list.innerHTML = `<p style="text-align:center;color:#6b7280;font-size:0.85rem;padding:24px 0">
+        No active resources found right now. Check back soon!
+      </p>`;
+    }
+
+    data.forEach((r, i) => {
+      list.appendChild(buildCard(r, i));
+
+      // Map marker
+      if (r.latitude && r.longitude) {
+        const marker = new google.maps.Marker({
+          position: { lat: r.latitude, lng: r.longitude },
+          map,
+          title: r.title,
+          animation: google.maps.Animation.DROP,
+        });
+        marker.addListener('click', () => focusMarker(i));
+        markers.push(marker);
+      } else {
+        markers.push(null); // keep index alignment
+      }
+    });
+
+    hideOverlay();
+  }
+
+  // ─── Init Google Map ─────────────────────────────────────
+  function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: MAP_CENTER,
+      zoom:   MAP_ZOOM,
+      mapTypeControl: false,
+      fullscreenControl: false,
+      streetViewControl: false,
+      styles: [
+        { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit',      stylers: [{ visibility: 'simplified' }] },
+      ],
+    });
+    infoWindow = new google.maps.InfoWindow();
+  }
+
+  // ─── Bootstrap ──────────────────────────────────────────
+  function loadGoogleMaps() {
+    return new Promise((resolve) => {
+      window._mapReadyCb = resolve;
+      const s = document.createElement('script');
+      s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_API_KEY}&callback=_mapReadyCb`;
+      s.async = true;
+      s.defer = true;
+      document.head.appendChild(s);
+    });
+  }
+
+  async function bootstrap() {
+    showOverlay();
+    try {
+      const [, data] = await Promise.all([
+        loadGoogleMaps().then(initMap),
+        fetchResources()
+      ]);
+      render(data);
+    } catch (err) {
+      console.error('[ECFN Widget]', err);
+      showError(err?.message || 'An unexpected error occurred.');
+    }
+  }
+
+  // Wait for Supabase CDN to be available, then boot
+  if (typeof supabase !== 'undefined') {
+    bootstrap();
+  } else {
+    window.addEventListener('load', bootstrap);
+  }
+</script>
+</body>
+</html>

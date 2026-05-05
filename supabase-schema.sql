@@ -26,7 +26,7 @@ CREATE TABLE posts (
   end_time timestamp with time zone,
   category text,
   tags text[],
-  image_url text,
+  website_url text,                                    -- Organization's public website
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   expires_at timestamp with time zone,
   is_active boolean DEFAULT true
@@ -90,3 +90,8 @@ CREATE POLICY "Enable insert for authenticated users only"
 ON post_occurrences FOR INSERT
 TO authenticated
 WITH CHECK (true);
+
+-- 5. Migration: rename image_url → website_url on posts
+-- Run this in the Supabase SQL Editor if the posts table already exists:
+-- ALTER TABLE posts RENAME COLUMN image_url TO website_url;
+-- COMMENT ON COLUMN posts.website_url IS 'Public website URL for the posting organization';
