@@ -423,10 +423,8 @@ function App() {
 
   const getEndOfWeek = () => {
     const today = getLocalToday()
-    const day = today.getDay() // 0=Sun
-    const diff = day === 0 ? 0 : 7 - day // days until Sunday (end of week)
     const eow = new Date(today)
-    eow.setDate(today.getDate() + diff)
+    eow.setDate(today.getDate() + 6)
     eow.setHours(23, 59, 59, 999)
     return eow
   }
@@ -535,7 +533,7 @@ function App() {
 
             <div className="border-b dark:border-slate-800 pb-4" style={darkMode ? {} : { borderColor: 'var(--ecc-steel-border)' }}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-2xl font-bold dark:text-slate-100" style={darkMode ? {} : { color: 'var(--ecc-text)' }}>Upcoming Events This Week</h2>
+                <h2 className="text-2xl font-bold dark:text-slate-100" style={darkMode ? {} : { color: 'var(--ecc-text)' }}>Upcoming Events (Next 7 Days)</h2>
                 <span className="text-sm font-medium dark:text-slate-400 dark:bg-slate-900 px-3 py-1 rounded-full dark:border-slate-800 border"
                   style={darkMode ? {} : { color: 'var(--ecc-steel)', backgroundColor: 'var(--ecc-steel-light)', borderColor: 'var(--ecc-steel-border)' }}
                 >
