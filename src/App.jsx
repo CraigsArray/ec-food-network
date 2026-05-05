@@ -32,8 +32,12 @@ function App() {
   const [formData, setFormData] = useState({
     title: '', description: '', category: '',
     address: '', city: '', zip: '',
-    image_url: '', tags: '',
+    website_url: '', tags: '',
     expires_at: '', is_active: true
+  })
+
+  const [orgData, setOrgData] = useState({
+    name: '', website: '', phone: '', email: '', logo_url: ''
   })
 
   // Repeating event state
@@ -324,6 +328,29 @@ function App() {
     setIsSubmitting(true)
     setFormFeedback({ type: '', message: '' })
 
+    // 1. Insert organization if name provided, get back its id
+    let organization_id = null
+    if (orgData.name.trim()) {
+      const { data: insertedOrg, error: orgError } = await supabase
+        .from('organizations')
+        .insert([{
+          name: orgData.name.trim(),
+          website: orgData.website || null,
+          phone: orgData.phone || null,
+          email: orgData.email || null,
+          logo_url: orgData.logo_url || null,
+        }])
+        .select()
+
+      if (orgError) {
+        setFormFeedback({ type: 'error', message: `Organization error: ${orgError.message}` })
+        setIsSubmitting(false)
+        return
+      }
+      organization_id = insertedOrg[0].id
+    }
+
+    // 2. Build and insert the post
     const tagsArray = formData.tags
       ? formData.tags.split(',').map(t => t.trim()).filter(Boolean)
       : null
@@ -338,7 +365,8 @@ function App() {
       website_url: formData.website_url || null,
       tags: tagsArray,
       expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null,
-      is_active: formData.is_active
+      is_active: formData.is_active,
+      ...(organization_id && { organization_id }),
     }
 
     const { data: insertedPost, error: postError } = await supabase
@@ -385,7 +413,8 @@ function App() {
 
     const count = isRepeating ? generateOccurrences().length : occurrences.filter(o => o.start_time).length
     setFormFeedback({ type: 'success', message: `✅ Resource posted with ${count} occurrence${count !== 1 ? 's' : ''}!` })
-    setFormData({ title: '', description: '', category: '', address: '', city: '', zip: '', image_url: '', tags: '', expires_at: '', is_active: true })
+    setFormData({ title: '', description: '', category: '', address: '', city: '', zip: '', website_url: '', tags: '', expires_at: '', is_active: true })
+    setOrgData({ name: '', website: '', phone: '', email: '', logo_url: '' })
     setOccurrences([{ start_time: '', end_time: '', notes: '' }])
     setIsRepeating(false)
     setRepeatConfig({ startDate: '', startTime: '', endTime: '', pattern: 'weekly', weekdayOrdinal: '1', weekday: '1', notes: '' })
@@ -751,7 +780,7 @@ function App() {
               <div className="bg-indigo-600 dark:bg-indigo-700 px-6 py-4 flex items-center justify-between">
                 <div>
                   <h2 className="text-white font-bold text-lg">⚙ Admin Panel</h2>
-                  <p className="text-indigo-200 text-xs mt-0.5">Insert into Supabase → posts + post_occurrences</p>
+                  <p className="text-indigo-200 text-xs mt-0.5">Insert into Supabase → organizations + posts + post_occurrences</p>
                 </div>
                 <button onClick={() => setShowAdmin(false)} className="text-indigo-200 hover:text-white text-xl leading-none">✕</button>
               </div>
@@ -764,8 +793,37 @@ function App() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Section: Core */}
+                  {/* Section: Organization */}
                   <div className="space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
+                      Organization <span className="normal-case font-normal text-slate-400">(optional)</span>
+                    </p>
+                    <div>
+                      <label className="label">Organization Name</label>
+                      <input value={orgData.name} onChange={e => setOrgData(p => ({ ...p, name: e.target.value }))} placeholder="e.g. El Cajon Food Bank" className="field" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">Phone</label>
+                        <input value={orgData.phone} onChange={e => setOrgData(p => ({ ...p, phone: e.target.value }))} placeholder="(619) 555-0100" className="field" />
+                      </div>
+                      <div>
+                        <label className="label">Email</label>
+                        <input value={orgData.email} onChange={e => setOrgData(p => ({ ...p, email: e.target.value }))} type="email" placeholder="contact@org.org" className="field" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="label">Org Website</label>
+                      <input value={orgData.website} onChange={e => setOrgData(p => ({ ...p, website: e.target.value }))} type="url" placeholder="https://example.org" className="field" />
+                    </div>
+                    <div>
+                      <label className="label">Logo URL <span className="normal-case font-normal text-slate-400">(optional)</span></label>
+                      <input value={orgData.logo_url} onChange={e => setOrgData(p => ({ ...p, logo_url: e.target.value }))} type="url" placeholder="https://example.org/logo.png" className="field" />
+                    </div>
+                  </div>
+
+                  {/* Section: Core */}
+                  <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">Core Info</p>
                     <div>
                       <label className="label">Title *</label>
